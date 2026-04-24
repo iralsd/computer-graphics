@@ -26,6 +26,8 @@ def bresenham(x0, y0, x1, y1):
 
     for i in range(dx + 1):
         points.append((x, y))
+        if dx == 0 and dy == 0:
+            break
         while d >= 0:
             if is_steep:
                 x += sx
