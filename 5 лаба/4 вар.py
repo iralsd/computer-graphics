@@ -1,17 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from matplotlib.colors import ListedColormap
+import os
 
-A, B, C, D, E = (10, 150), (20, 80), (50, 100), (90, 10), (150, 150)
-polygon = [A, B, C, D, E]
+n = int(input())
+
+polygon = []
+for i in range(n):
+    x, y = map(int, input().split())
+    polygon.append((x, y))
 
 ordered_edges = [
-    (B, C),
-    (D, E),
-    (A, B),
-    (C, D),
-    (E, A)
+    (polygon[1], polygon[2]),
+    (polygon[3], polygon[4]),
+    (polygon[0], polygon[1]),
+    (polygon[2], polygon[3]),
+    (polygon[4], polygon[0])
 ]
 
 width, height = 300, 200
@@ -24,65 +28,66 @@ im = ax.imshow(img, cmap=cmap, vmin=0, vmax=1, aspect='auto')
 xs = [p[0] for p in polygon] + [polygon[0][0]]
 ys = [p[1] for p in polygon] + [polygon[0][1]]
 ax.plot(xs, ys, color="black", linewidth=2)
+
 ax.set_xlim(0, width)
 ax.set_ylim(height, 0)
-ax.set_title("Lab 5: XOR с перегородкой")
+ax.set_title("XOR fill — SPACE = шаг + сохранение")
 
 def draw_steps():
+    img.fill(0)
+    
     for p1, p2 in ordered_edges:
         x1, y1 = p1
         x2, y2 = p2
         
-        # Горизонтальное ребро
         if y1 == y2:
-            y = y1
-            x_left = int(min(x1, x2))
-            if 0 <= y < height:
-                img[y, x_left:] = 1 - img[y, x_left:]
-                yield img.copy()
             continue
         
-        # Определяем направление: true = вниз (y увеличивается)
-        go_down = y2 > y1
-        
-        # Приводим к формату: y_low (верх) -> y_high (низ)
-        if not go_down:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-        
-        dx = (x2 - x1) / (y2 - y1)
-        
-        # Канон: включаем y_min, исключаем y_max
-        # Если ребро в оригинале шло вниз — y1 это верх, включаем его
-        # Если ребро в оригинале шло вверх — y2 это верх (который стал y1 после сортировки)
-        # НО! После сортировки y1 всегда верх. Правило: включаем y_low, исключаем y_high.
-        # А для того чтобы вершина обработалась ровно 1 раз:
-        # — если ребро идёт вниз (go_down=true):  range(y_low, y_high)
-        # — если ребро идёт вверх (go_down=false): range(y_low+1, y_high+1)
-        
-        if go_down:
+        if y1 < y2:
             y_start, y_end = y1, y2
-            cur_x = x1
+            x_start, x_end = x1, x2
         else:
-            y_start, y_end = y1 + 1, y2 + 1
-            cur_x = x1 + dx
-        
-        for y in range(y_start, y_end):
-            if y >= height:
-                break
-            x_int = int(round(cur_x))
+            y_start, y_end = y2, y1
+            x_start, x_end = x2, x1
             
-            if 0 <= y < height and 0 <= x_int < width:
-                img[y, x_int:] = 1 - img[y, x_int:]
+        dx = (x_end - x_start) / (y_end - y_start)
+        cur_x = float(x_start)
+        
+        for y in range(int(y_start), int(y_end)):
+            if 0 <= y < height:
+                x_int = int(cur_x + 0.5)
+                
+                if 0 <= x_int < width:
+                    img[y, x_int:] = 1 - img[y, x_int:]
             
             cur_x += dx
-            yield img.copy()
-
-    for _ in range(50):
+        
         yield img.copy()
 
-def update(frame):
-    im.set_data(frame)
-    return [im]
+step_generator = draw_steps()
+step_counter = 0
 
-ani = FuncAnimation(fig, update, frames=draw_steps, interval=5, repeat=False, save_count=2000)
+save_dir = os.path.dirname(os.path.abspath(__file__))
+
+def on_key(event):
+    global step_counter
+    
+    if event.key == ' ':
+        try:
+            frame = next(step_generator)
+            im.set_data(frame)
+            fig.canvas.draw_idle()
+            
+            step_counter += 1
+            filename = os.path.join(save_dir, f"step_{step_counter}.png")
+
+            fig.savefig(filename)
+
+            print(f"Сохранено: {filename}")
+        
+        except StopIteration:
+            print("Готово 😎")
+
+fig.canvas.mpl_connect('key_press_event', on_key)
+
 plt.show()
