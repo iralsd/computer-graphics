@@ -31,7 +31,7 @@ ax.plot(xs, ys, color="black", linewidth=2)
 
 ax.set_xlim(0, width)
 ax.set_ylim(height, 0)
-ax.set_title("XOR fill — SPACE = шаг + сохранение")
+ax.set_title("XOR с перегородкой")
 
 def draw_steps():
     img.fill(0)
@@ -86,8 +86,16 @@ def on_key(event):
             print(f"Сохранено: {filename}")
         
         except StopIteration:
-            print("Готово 😎")
+            print("оп оп")
 
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 plt.show()
+
+
+# 5
+# 10 150
+# 20 80
+# 50 100
+# 90 10
+# 150 150
