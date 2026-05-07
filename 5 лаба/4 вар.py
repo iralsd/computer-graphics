@@ -82,8 +82,6 @@ def on_key(event):
             filename = os.path.join(save_dir, f"step_{step_counter}.png")
 
             fig.savefig(filename)
-
-            print(f"Сохранено: {filename}")
         
         except StopIteration:
             print("оп оп")
