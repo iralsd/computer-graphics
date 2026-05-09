@@ -1,0 +1,118 @@
+import re
+from collections import defaultdict
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# =========================================
+# НАСТРОЙКИ
+# =========================================
+
+LOG_FILE = "bot.log"
+
+# =========================================
+# РЕГУЛЯРКА
+# =========================================
+
+pattern = re.compile(
+    r"(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2},\d+ \| IN"
+)
+
+# =========================================
+# ДНИ НЕДЕЛИ
+# =========================================
+
+days_order = [
+    "Понедельник",
+    "Вторник",
+    "Среда",
+    "Четверг",
+    "Пятница",
+    "Суббота",
+    "Воскресенье"
+]
+
+weekday_stats = defaultdict(int)
+
+# =========================================
+# ПАРСИНГ ЛОГОВ
+# =========================================
+
+with open(LOG_FILE, "r", encoding="utf-8") as f:
+    for line in f:
+
+        match = pattern.search(line)
+
+        if not match:
+            continue
+
+        date_str = match.group(1)
+
+        # переводим в дату
+        date = pd.to_datetime(date_str)
+
+        # номер дня недели
+        weekday_index = date.weekday()
+
+        weekday_name = days_order[weekday_index]
+
+        weekday_stats[weekday_name] += 1
+
+# =========================================
+# DATAFRAME
+# =========================================
+
+df = pd.DataFrame({
+    "День недели": days_order,
+    "Сообщения": [
+        weekday_stats[day]
+        for day in days_order
+    ]
+})
+
+print(df)
+
+# =========================================
+# ГРАФИК
+# =========================================
+
+plt.figure(figsize=(12, 6))
+
+bars = plt.bar(
+    df["День недели"],
+    df["Сообщения"]
+)
+
+# подписи над столбцами
+for bar in bars:
+    height = bar.get_height()
+
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,
+        height,
+        str(height),
+        ha='center',
+        va='bottom'
+    )
+
+plt.title("Активность пользователей по дням недели")
+plt.xlabel("День недели")
+plt.ylabel("Количество сообщений")
+
+plt.xticks(rotation=15)
+
+plt.grid(axis='y')
+
+plt.tight_layout()
+
+# =========================================
+# СОХРАНЕНИЕ
+# =========================================
+
+plt.savefig("weekday_activity.png", dpi=300)
+
+# =========================================
+# ПОКАЗ
+# =========================================
+
+plt.show()
