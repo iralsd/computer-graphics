@@ -4,23 +4,17 @@ from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# =========================================
-# НАСТРОЙКИ
-# =========================================
+
 
 LOG_FILE = "bot.log"
 
-# =========================================
-# РЕГУЛЯРКА
-# =========================================
+
 
 pattern = re.compile(
     r"(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2},\d+ \| IN"
 )
 
-# =========================================
-# ДНИ НЕДЕЛИ
-# =========================================
+
 
 days_order = [
     "Понедельник",
@@ -34,9 +28,7 @@ days_order = [
 
 weekday_stats = defaultdict(int)
 
-# =========================================
-# ПАРСИНГ ЛОГОВ
-# =========================================
+
 
 with open(LOG_FILE, "r", encoding="utf-8") as f:
     for line in f:
@@ -48,19 +40,14 @@ with open(LOG_FILE, "r", encoding="utf-8") as f:
 
         date_str = match.group(1)
 
-        # переводим в дату
         date = pd.to_datetime(date_str)
 
-        # номер дня недели
         weekday_index = date.weekday()
 
         weekday_name = days_order[weekday_index]
 
         weekday_stats[weekday_name] += 1
 
-# =========================================
-# DATAFRAME
-# =========================================
 
 df = pd.DataFrame({
     "День недели": days_order,
@@ -72,9 +59,6 @@ df = pd.DataFrame({
 
 print(df)
 
-# =========================================
-# ГРАФИК
-# =========================================
 
 plt.figure(figsize=(12, 6))
 
@@ -83,7 +67,6 @@ bars = plt.bar(
     df["Сообщения"]
 )
 
-# подписи над столбцами
 for bar in bars:
     height = bar.get_height()
 
@@ -105,14 +88,9 @@ plt.grid(axis='y')
 
 plt.tight_layout()
 
-# =========================================
-# СОХРАНЕНИЕ
-# =========================================
+
 
 plt.savefig("weekday_activity.png", dpi=300)
 
-# =========================================
-# ПОКАЗ
-# =========================================
 
 plt.show()
